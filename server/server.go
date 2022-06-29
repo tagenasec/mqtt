@@ -629,35 +629,35 @@ func (s *Server) publishToSubscribers(pk packets.Packet) {
 				out.FixedHeader.Qos = qos
 			}
 
-			if out.FixedHeader.Qos > 0 { // If QoS required, save to inflight index.
-				if out.PacketID == 0 {
-					out.PacketID = uint16(client.NextPacketID())
-				}
+			// if out.FixedHeader.Qos > 0 { // If QoS required, save to inflight index.
+			// 	if out.PacketID == 0 {
+			// 		out.PacketID = uint16(client.NextPacketID())
+			// 	}
 
-				// If a message has a QoS, we need to ensure it is delivered to
-				// the client at some point, one way or another. Store the publish
-				// packet in the client's inflight queue and attempt to redeliver
-				// if an appropriate ack is not received (or if the client is offline).
-				sent := time.Now().Unix()
-				q := client.Inflight.Set(out.PacketID, clients.InflightMessage{
-					Packet: out,
-					Sent:   sent,
-				})
-				if q {
-					atomic.AddInt64(&s.System.Inflight, 1)
-				}
+			// 	// If a message has a QoS, we need to ensure it is delivered to
+			// 	// the client at some point, one way or another. Store the publish
+			// 	// packet in the client's inflight queue and attempt to redeliver
+			// 	// if an appropriate ack is not received (or if the client is offline).
+			// 	sent := time.Now().Unix()
+			// 	q := client.Inflight.Set(out.PacketID, clients.InflightMessage{
+			// 		Packet: out,
+			// 		Sent:   sent,
+			// 	})
+			// 	if q {
+			// 		atomic.AddInt64(&s.System.Inflight, 1)
+			// 	}
 
-				if s.Store != nil {
-					s.onStorage(client, s.Store.WriteInflight(persistence.Message{
-						ID:          persistentID(client, out),
-						T:           persistence.KInflight,
-						FixedHeader: persistence.FixedHeader(out.FixedHeader),
-						TopicName:   out.TopicName,
-						Payload:     out.Payload,
-						Sent:        sent,
-					}))
-				}
-			}
+			// 	if s.Store != nil {
+			// 		s.onStorage(client, s.Store.WriteInflight(persistence.Message{
+			// 			ID:          persistentID(client, out),
+			// 			T:           persistence.KInflight,
+			// 			FixedHeader: persistence.FixedHeader(out.FixedHeader),
+			// 			TopicName:   out.TopicName,
+			// 			Payload:     out.Payload,
+			// 			Sent:        sent,
+			// 		}))
+			// 	}
+			// }
 
 			s.onError(client.Info(), s.writeClient(client, out))
 		}
